@@ -52,7 +52,38 @@ Board.prototype.setData = function(data) {
     }
     return this;
 };
-Board.prototype.availableBoards = function(type) {
+/**
+ * 注意，这里唯一还未去除镜像对称的棋局
+ * [uniqAvailableBoards description]
+ * @return {[type]} [description]
+ */
+Board.prototype.uniqAvailableBoards = function(type) {
+    // var availableBoards = {};
+    // for (var i = 0; i < this.row; i++) {
+    //     for (var j = 0; j < this.column; j++) {
+    //         if (this.data[i][j] == Board.NONE) {
+    //             var board = new Board(this.row, this.column);
+    //             board.setData(this.data);
+    //             board.put(i, j, type);
+    //             var hash = board.hash(3, 36);
+    //             var board90 = board.rotate(90);
+    //             var board180 = board90.rotate(90);
+    //             var board270 = board180.rotate(90);
+    //             var hash90 = board90.hash(3, 36);
+    //             var hash180 = board180.hash(3, 36);
+    //             var hash270 = board270.hash(3, 36);
+    //             if (!availableBoards[hash] && !availableBoards[hash90] && !availableBoards[hash180] && !availableBoards[hash270]) {
+    //                 board.nextRow = i;
+    //                 board.nextColumn = j;
+    //                 availableBoards[hash] = board;
+    //             } else {
+    //                 board = board90 = board180 = board270 = null;
+    //             }
+    //         }
+    //     }
+    // }
+    // availableBoards = _.values(availableBoards);
+    // return availableBoards;
     var availableBoards = [];
     for (var i = 0; i < this.row; i++) {
         for (var j = 0; j < this.column; j++) {
@@ -224,27 +255,34 @@ Board.prototype.evaluate = function() {
     }
     return maxW - minW;
 };
-var max = function(currentBoard, depth) {
-    var w;
+var max = function(currentBoard, depth, beta) {
+    var w, maxBoard, alpha = -Infinity;
     if (depth == 0) {
         w = currentBoard.evaluate();
         return {
             w: w
         };
     } else {
-        var boards = currentBoard.availableBoards(Board.MAX);
+        var boards = currentBoard.uniqAvailableBoards(Board.MAX);
         // console.log('搜索MAX' + boards.length + '个棋局');
-        var maxF = -Infinity,
-            maxBoard;
-        boards.forEach(function(board) {
-            board.f = min(board, depth - 1).w;
-            if (board.f > maxF) {
-                maxF = board.f;
+        for (var i = 0, l = boards.length; i < l; i++) {
+            var board = boards[i];
+            board.f = min(board, depth - 1, alpha).w;
+            if (board.f > alpha) {
+                alpha = board.f;
                 maxBoard = board;
             }
-        });
+            if (alpha >= beta) {
+                // console.log('MAX节点' + l + '个棋局，剪掉了' + (l - 1 - i) + '个MIN棋局');
+                return {
+                    w: alpha,
+                    is_ended: false,
+                    is_win: alpha == Infinity ? true : false
+                }
+            }
+        }
         if (maxBoard) {
-            w = maxF;
+            w = alpha;
             currentBoard.put(maxBoard.nextRow, maxBoard.nextColumn, Board.MAX);
             return {
                 w: w,
@@ -261,27 +299,34 @@ var max = function(currentBoard, depth) {
         }
     }
 };
-var min = function(currentBoard, depth) {
-    var w;
+var min = function(currentBoard, depth, alpha) {
+    var w, minBoard, beta = Infinity;
     if (depth == 0) {
         w = currentBoard.evaluate();
         return {
             w: w
         };
     } else {
-        var boards = currentBoard.availableBoards(Board.MIN);
+        var boards = currentBoard.uniqAvailableBoards(Board.MIN);
         // console.log('搜索MIN' + boards.length + '个棋局');
-        var minF = Infinity,
-            minBoard;
-        boards.forEach(function(board) {
-            board.f = max(board, depth - 1).w;
-            if (board.f < minF) {
-                minF = board.f;
+        for (var i = 0, l = boards.length; i < l; i++) {
+            var board = boards[i];
+            board.f = max(board, depth - 1, beta).w;
+            if (board.f < beta) {
+                beta = board.f;
                 minBoard = board;
             }
-        });
+            if (beta <= alpha) {
+                // console.log('MIN节点' + l + '个棋局，剪掉了' + (l - 1 - i) + '个MAX棋局');
+                return {
+                    w: beta,
+                    is_ended: false,
+                    is_win: w == -Infinity ? true : false
+                }
+            }
+        }
         if (minBoard) {
-            w = minF;
+            w = beta;
             currentBoard.put(minBoard.nextRow, minBoard.nextColumn, Board.MIN);
             return {
                 w: w,

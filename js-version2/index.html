@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>一子棋AI版</title>
+    <style type="text/css">
+    body{
+        margin: 0;
+        font-family: Microsoft Yahei;
+        text-align: center;
+    }
+    .chessboard{
+        width: 153px;
+        margin: 50px auto;
+        border-left: 1px solid #ccc;
+        border-top: 1px solid #ccc;
+    }
+    .chessboard .row{
+        overflow: hidden;
+    }
+    .chessboard .tile{
+        width: 50px;
+        height: 50px;
+        float: left;
+        border-right: 1px solid #ccc;
+        border-bottom: 1px solid #ccc;
+        text-align: center;
+        line-height: 50px;
+    }
+    .chessboard .chess-max,.chessboard .chess-min{
+        font-size: 36px;
+        cursor: pointer;
+        -webkit-user-select: none;
+    }
+    </style>
+</head>
+<body>
+    <div class="chessboard"></div>
+    <script type="text/javascript" src="jquery-2.2.2.min.js"></script>
+    <script type="text/javascript" src="underscore-1.8.3.min.js"></script>
+    <script type="text/javascript" src="onechess.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+</body>
+</html>
