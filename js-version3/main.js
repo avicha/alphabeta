@@ -1,46 +1,81 @@
-var chessBoard = new Board(15, 15);
-var chessBoardDom = $('.chessboard');
+//棋盘
+var chessboard = new Chessboard(15, 15);
+var chessboardDom = $('.chessboard');
+var t = 0,
+    tick;
+//初始化棋盘dom
 var initData = function() {
-    for (var i = 0; i < chessBoard.row; i++) {
+    for (var i = 0; i < chessboard.row; i++) {
         var rowDom = $('<div></div>').addClass('row');
-        for (var j = 0; j < chessBoard.column; j++) {
+        for (var j = 0; j < chessboard.column; j++) {
             var tile = $('<div></div>').addClass('tile').data({
                 row: i,
                 column: j
             });
             rowDom.append(tile);
         }
-        chessBoardDom.append(rowDom);
+        chessboardDom.append(rowDom);
     }
 };
 var initEvent = function() {
     $('.tile').on('click', function() {
-        var self = $(this);
-        var row = self.data('row'),
-            column = self.data('column');
-        if (self.is('.chess')) {
-            alert('请选择空余的格子下棋');
-        } else {
-            chessBoard.put(row, column, Board.MAX);
-            self.addClass('chess chess-max').text('●');
-            setTimeout(function() {
-                var w = chessBoard.evaluate();
-                if (w == Board.MAX_VALUE) {
-                    alert('你赢了！');
+        //如果下棋还未完结
+        if (!chessboard.isEnded()) {
+            var self = $(this);
+            //已经有棋子
+            if (self.is('.chess')) {
+                alert('请选择空余的格子下棋');
+            } else {
+                var row = self.data('row'),
+                    column = self.data('column');
+                //人下棋
+                chessboard.put(row, column, Chessboard.MAX);
+                self.addClass('chess chess-max current').text('●');
+                if (!tick) {
+                    tick = setInterval(function() {
+                        t++;
+                        $('.timer').text('你和alpha逼已经决战' + t + 's');
+                    }, 1000);
+                }
+                //人赢了，结束游戏
+                if (chessboard.isMaxWin()) {
+                    chessboard.end();
+                    clearInterval(tick);
+                    return alert('你花了' + t + 's战胜了alpha逼');
+                }
+                //没赢，但平手了
+                if (chessboard.isEnded()) {
+                    clearInterval(tick);
+                    return alert('你花了' + t + 's和alpha逼打成平手');
                 } else {
+                    //未分胜负，AI下棋
                     console.time('min');
-                    var res = min(chessBoard, 4);
+                    var res = min(chessboard, 2);
                     console.timeEnd('min');
-                    if (res.is_win) {
-                        alert('电脑赢了！');
+                    //AI下棋
+                    chessboard.put(res.row, res.column, Chessboard.MIN);
+                    $('.current').removeClass('current');
+                    chessboardDom.find('.row').eq(res.row).find('.tile').eq(res.column).addClass('chess chess-min current').text('○');
+                    //AI赢了，结束游戏
+                    if (chessboard.isMinWin()) {
+                        chessboard.end();
+                        clearInterval(tick);
+                        return alert('愚蠢的人类，你被alpha逼打败了！');
                     }
-                    if (!res.is_ended) {
-                        // chessBoard.put(chessBoard.currentRow, chessBoard.currentColumn, Board.MIN);
-                        chessBoardDom.find('.row').eq(chessBoard.currentRow).find('.tile').eq(chessBoard.currentColumn).addClass('chess chess-min').text('○');
+                    //没赢，但平手了，否则未分胜负，等待人继续下棋
+                    if (chessboard.isEnded()) {
+                        clearInterval(tick);
+                        return alert('你花了' + t + 's战胜了alpha逼');
                     }
                 }
-            }, 10);
+            }
         }
+    });
+    $('.rollback').on('click', function() {
+        var steps = chessboard.rollback(2);
+        steps.forEach(function(step) {
+            chessboardDom.find('.row').eq(step.row).find('.tile').eq(step.column).removeClass('chess chess-min chess-max').text('');
+        });
     });
 };
 initData();

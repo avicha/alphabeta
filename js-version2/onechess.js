@@ -48,11 +48,22 @@ var Chessboard = function(row, column) {
     this.stack = [];
     this.is_ended = false;
 };
+/**
+ * [toString 输出棋盘信息]
+ * @return {[type]} [description]
+ */
 Chessboard.prototype.toString = function() {
     return this.data.map(function(data) {
         return data.toString();
     }).join('\n');
 };
+/**
+ * [put 下棋]
+ * @param  {[type]} row    [行]
+ * @param  {[type]} column [列]
+ * @param  {[type]} type   [人还是AI下棋]
+ * @return {[type]}        [description]
+ */
 Chessboard.prototype.put = function(row, column, type) {
     if (this.data[row][column] == Chessboard.NONE) {
         this.data[row][column] = type;
@@ -67,6 +78,11 @@ Chessboard.prototype.put = function(row, column, type) {
     }
     return this;
 };
+/**
+ * [rollback 悔棋]
+ * @param  {[type]} n [后退n步]
+ * @return {[type]}   [description]
+ */
 Chessboard.prototype.rollback = function(n) {
     n = n || 1;
     for (var i = 0; i < n; i++) {
@@ -78,6 +94,10 @@ Chessboard.prototype.rollback = function(n) {
     this.is_ended = false;
     return this;
 };
+/**
+ * [reset 重置棋盘]
+ * @return {[type]} [description]
+ */
 Chessboard.prototype.reset = function() {
     for (var i = 0, n = this.row; i < n; i++) {
         for (var j = 0, m = this.column; j < m; j++) {
@@ -87,6 +107,10 @@ Chessboard.prototype.reset = function() {
     this.stack = [];
     this.is_ended = false;
 };
+/**
+ * [availableSteps 获取可走的位置]
+ * @return {[type]} [description]
+ */
 Chessboard.prototype.availableSteps = function() {
     var availableSteps = [];
     for (var i = 0, n = this.row; i < n; i++) {
@@ -101,6 +125,10 @@ Chessboard.prototype.availableSteps = function() {
     }
     return availableSteps;
 };
+/**
+ * [rotate 把棋盘旋转90度]
+ * @return {[type]} [description]
+ */
 Chessboard.prototype.rotate = function() {
     var board = new Chessboard(this.row, this.column),
         dx = Math.floor(this.column / 2),
@@ -132,13 +160,22 @@ Chessboard.prototype.rotate = function() {
     }
     return board;
 };
-
+/**
+ * [hash 给棋盘一个编码]
+ * @param  {[type]} sourceRadix [来源进制]
+ * @param  {[type]} targetRadix [目的进制]
+ * @return {[type]}             [description]
+ */
 Chessboard.prototype.hash = function(sourceRadix, targetRadix) {
     var str = this.data.map(function(arr) {
         return arr.join('');
     }).join('');
     return parseInt(str, sourceRadix).toString(targetRadix);
 };
+/**
+ * [evaluate 计算当前棋盘的估值]
+ * @return {[type]} [description]
+ */
 Chessboard.prototype.evaluate = function() {
     //max，min权重，max连棋数，min连棋数
     var maxW = minW = 0,
@@ -268,18 +305,34 @@ Chessboard.prototype.evaluate = function() {
     //返回双方实力差
     return maxW - minW;
 };
+/**
+ * [isMaxWin 人是否赢了]
+ * @return {Boolean} [description]
+ */
 Chessboard.prototype.isMaxWin = function() {
     var w = this.evaluate();
     return w == Infinity ? true : false;
 };
+/**
+ * [isMinWin AI是否赢了]
+ * @return {Boolean} [description]
+ */
 Chessboard.prototype.isMinWin = function() {
     var w = this.evaluate();
     return w == -Infinity ? true : false;
 };
+/**
+ * [end 结束游戏]
+ * @return {[type]} [description]
+ */
 Chessboard.prototype.end = function() {
     this.is_ended = true;
     return this;
 };
+/**
+ * [isEnded 游戏是否结束]
+ * @return {Boolean} [description]
+ */
 Chessboard.prototype.isEnded = function() {
     return this.is_ended;
 };
@@ -329,6 +382,7 @@ var max = function(currentChessboard, depth, beta) {
                         row = step.row;
                         column = step.column;
                     }
+                    //如果人可以获得更好的走法，则AI必然不会选择这一步走法，所以不用再考虑人的其他走法
                     if (alpha >= beta) {
                         // console.log('MAX节点' + l + '个棋局，剪掉了' + (l - 1 - i) + '个MIN棋局');
                         break;
@@ -348,7 +402,7 @@ var max = function(currentChessboard, depth, beta) {
  * [min min下棋]
  * @param  {[type]} currentChessboard [当前棋盘]
  * @param  {[type]} depth        [考虑深度]
- * @return {[type]}              [description]
+ * @return {[type]}              [权重和当前推荐下棋的位置]
  */
 var min = function(currentChessboard, depth, alpha) {
     var row, column, beta = Infinity;
@@ -388,6 +442,7 @@ var min = function(currentChessboard, depth, alpha) {
                         row = step.row;
                         column = step.column;
                     }
+                    //如果AI可以获得更好的走法，则人必然不会选择这一步走法，所以不用再考虑AI的其他走法
                     if (beta <= alpha) {
                         // console.log('MIN节点' + l + '个棋局，剪掉了' + (l - 1 - i) + '个MAX棋局');
                         break;
@@ -402,6 +457,9 @@ var min = function(currentChessboard, depth, alpha) {
         }
     }
 };
+//没有棋子
 Chessboard.NONE = 0;
+//玩家棋子
 Chessboard.MAX = 1;
+//AI棋子
 Chessboard.MIN = 2;

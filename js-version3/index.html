@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width">
     <title>五子棋AI版</title>
     <style type="text/css">
     body{
@@ -9,9 +10,17 @@
         font-family: Microsoft Yahei;
         text-align: center;
     }
+    .timer{
+        margin: 0 20px;
+    }
+    .rollback{
+        width: 70px;
+        height: 30px;
+        margin: 20px;
+    }
     .chessboard{
-        width: 465px;
-        margin: 10px auto;
+        width: 315px;
+        margin: 0 auto;
         border-left: 1px solid #ccc;
         border-top: 1px solid #ccc;
     }
@@ -19,25 +28,31 @@
         overflow: hidden;
     }
     .chessboard .tile{
-        width: 30px;
-        height: 30px;
+        width: 20px;
+        height: 20px;
         float: left;
         border-right: 1px solid #ccc;
         border-bottom: 1px solid #ccc;
         text-align: center;
-        line-height: 30px;
+        line-height: 20px;
+    }
+    .chessboard .tile.current{
+        background-color: #ddd;
     }
     .chessboard .chess-max,.chessboard .chess-min{
-        font-size: 30px;
+        font-size: 20px;
         cursor: pointer;
         -webkit-user-select: none;
     }
     </style>
 </head>
 <body>
+    <div>
+        <span class="timer">你和alpha逼已经决战0s</span>
+        <button class="rollback">悔棋</button>
+    </div>
     <div class="chessboard"></div>
     <script type="text/javascript" src="jquery-2.2.2.min.js"></script>
-    <script type="text/javascript" src="underscore-1.8.3.min.js"></script>
     <script type="text/javascript" src="fivechess.js"></script>
     <script type="text/javascript" src="main.js"></script>
 </body>
