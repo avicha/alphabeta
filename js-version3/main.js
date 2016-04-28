@@ -50,25 +50,27 @@ var initEvent = function() {
                     clearInterval(tick);
                     return alert('你花了' + t + 's和alpha逼撕成平手');
                 } else {
-                    //未分胜负，AI下棋
-                    console.time('min');
-                    var res = min(chessboard, 2);
-                    console.timeEnd('min');
-                    //AI下棋
-                    chessboard.put(res.row, res.column, Chessboard.MIN);
-                    $('.current').removeClass('current');
-                    chessboardDom.find('.row').eq(res.row).find('.tile').eq(res.column).addClass('chess chess-min current').text('○');
-                    //AI赢了，结束游戏
-                    if (chessboard.isMinWin()) {
-                        chessboard.end();
-                        clearInterval(tick);
-                        return alert('愚蠢的人类，你被alpha逼打败了！');
-                    }
-                    //没赢，但平手了，否则未分胜负，等待人继续下棋
-                    if (chessboard.isEnded()) {
-                        clearInterval(tick);
-                        return alert('你花了' + t + 's撕赢了alpha逼');
-                    }
+                    setTimeout(function() {
+                        //未分胜负，AI下棋
+                        console.time('min');
+                        var res = min(chessboard, 2);
+                        console.timeEnd('min');
+                        //AI下棋
+                        chessboard.put(res.row, res.column, Chessboard.MIN);
+                        $('.current').removeClass('current');
+                        chessboardDom.find('.row').eq(res.row).find('.tile').eq(res.column).addClass('chess chess-min current').text('○');
+                        //AI赢了，结束游戏
+                        if (chessboard.isMinWin()) {
+                            chessboard.end();
+                            clearInterval(tick);
+                            return alert('愚蠢的人类，你被alpha逼打败了！');
+                        }
+                        //没赢，但平手了，否则未分胜负，等待人继续下棋
+                        if (chessboard.isEnded()) {
+                            clearInterval(tick);
+                            return alert('你花了' + t + 's撕赢了alpha逼');
+                        }
+                    }, 200);
                 }
             }
         }
