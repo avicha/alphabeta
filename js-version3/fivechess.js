@@ -7,10 +7,15 @@ var Chessboard = function(row, column) {
     this.data = [];
     this.row = row;
     this.column = column;
+    //赢法数组
     this.wins = [];
+    //赢法数
     this.count = 0;
+    //记录max每一种赢法的已经达成棋子数
     this.maxWin = [];
+    //记录min每一种赢法的已经达成棋子数
     this.minWin = [];
+    //初始化棋盘，顺便初始化赢法数组
     for (var i = 0; i < row; i++) {
         this.data[i] = [];
         this.wins[i] = [];
@@ -19,6 +24,7 @@ var Chessboard = function(row, column) {
             this.wins[i][j] = [];
         }
     }
+    //横向赢法
     for (var i = 0; i < row; i++) {
         for (var j = 0; j <= column - 5; j++) {
             for (var k = 0; k < 5; k++) {
@@ -27,6 +33,7 @@ var Chessboard = function(row, column) {
             this.count++;
         }
     }
+    //纵向赢法
     for (var i = 0; i < column; i++) {
         for (var j = 0; j <= row - 5; j++) {
             for (var k = 0; k < 5; k++) {
@@ -35,6 +42,7 @@ var Chessboard = function(row, column) {
             this.count++;
         }
     }
+    //右斜线的赢法
     for (var i = 0; i <= row - 5; i++) {
         for (var j = 0; j <= column - 5; j++) {
             for (var k = 0; k < 5; k++) {
@@ -43,6 +51,7 @@ var Chessboard = function(row, column) {
             this.count++;
         }
     }
+    //左斜线的赢法
     for (var i = 0; i <= row - 5; i++) {
         for (var j = column - 1; j >= 4; j--) {
             for (var k = 0; k < 5; k++) {
@@ -51,6 +60,7 @@ var Chessboard = function(row, column) {
             this.count++;
         }
     }
+    //初始化max和min每一种赢法的下子情况
     for (var i = 0; i < this.count; i++) {
         this.maxWin[i] = {
             max: 0,
@@ -61,7 +71,9 @@ var Chessboard = function(row, column) {
             max: 0
         };
     }
+    //下棋记录堆栈
     this.stack = [];
+    //游戏是否结束
     this.is_ended = false;
 };
 /**
@@ -74,6 +86,16 @@ Chessboard.prototype.toString = function() {
     }).join('\n');
 };
 /**
+ * 返回当前最新一步下的棋子
+ * @return {[type]}
+ */
+Chessboard.prototype.current = function() {
+    var l = this.stack.length;
+    if (l) {
+        return this.stack[l - 1];
+    }
+};
+/**
  * [put 下棋]
  * @param  {[type]} row    [行]
  * @param  {[type]} column [列]
@@ -83,12 +105,13 @@ Chessboard.prototype.toString = function() {
 Chessboard.prototype.put = function(row, column, type) {
     if (this.data[row][column] == Chessboard.NONE) {
         this.data[row][column] = type;
+        //放进记录堆栈
         this.stack.push({
             row: row,
             column: column,
             type: type
         });
-
+        //下棋之后对每一种赢法的下棋情况进行更新
         for (var i = 0; i < this.count; i++) {
             if (this.wins[row][column][i]) {
                 if (type == Chessboard.MAX) {
@@ -100,9 +123,9 @@ Chessboard.prototype.put = function(row, column, type) {
                 }
             }
         }
-
+        //如果下子满了则结束游戏
         if (this.stack.length == this.row * this.column) {
-            this.is_ended = true;
+            this.end();
         }
     }
     return this;
@@ -113,6 +136,7 @@ Chessboard.prototype.put = function(row, column, type) {
  * @return {[type]}   [description]
  */
 Chessboard.prototype.rollback = function(n) {
+    //记录后退的n步走法
     var steps = [];
     n = n || 1;
     for (var i = 0; i < n; i++) {
@@ -122,7 +146,9 @@ Chessboard.prototype.rollback = function(n) {
             var row = step.row,
                 column = step.column,
                 type = step.type;
+            //置空格点
             this.data[row][column] = Chessboard.NONE;
+            //更新每一种赢法的下子情况
             for (var j = 0; j < this.count; j++) {
                 if (this.wins[row][column][j]) {
                     if (type == Chessboard.MAX) {
@@ -139,6 +165,11 @@ Chessboard.prototype.rollback = function(n) {
     this.is_ended = false;
     return steps;
 };
+/**
+ * 获取当前点附近考虑的下棋位置
+ * @param  {[p这个点]}
+ * @return {[type]}
+ */
 Chessboard.prototype.getNearPoints = function(p) {
     var points = [],
         row, column;
@@ -182,6 +213,7 @@ Chessboard.prototype.getNearPoints = function(p) {
     }
     return points;
 };
+//该位置是否合法
 Chessboard.prototype.isValid = function(row, column) {
     return row >= 0 && row < this.row && column >= 0 && column < this.column && this.data[row][column] == Chessboard.NONE;
 };
@@ -470,6 +502,20 @@ Chessboard.prototype.evaluate = function() {
     // minTwoCount += this.analyseMin(rowData, Chessboard.TWO_TYPE) + this.analyseMin(columnData, Chessboard.TWO_TYPE) + this.analyseMin(edgeData1, Chessboard.TWO_TYPE) + this.analyseMin(edgeData2, Chessboard.TWO_TYPE);
     // maxW += maxTwoCount * Chessboard.TWO_W;
     // minW += minTwoCount * Chessboard.TWO_W;
+    var maxGroup = {
+            "5": 0,
+            "4": 0,
+            "3": 0,
+            "2": 0,
+            "1": 0
+        },
+        minGroup = {
+            "5": 0,
+            "4": 0,
+            "3": 0,
+            "2": 0,
+            "1": 0
+        };
     for (var i = 0; i < this.count; i++) {
         if (this.maxWin[i].max == 5 && !this.maxWin[i].min) {
             return Chessboard.MAX_VALUE;
@@ -478,24 +524,32 @@ Chessboard.prototype.evaluate = function() {
             return Chessboard.MIN_VALUE;
         }
         if (this.maxWin[i].max == 4 && !this.maxWin[i].min) {
-            maxW += Chessboard.FOUR_W;
+            maxGroup[4]++;
         }
         if (this.minWin[i].min == 4 && !this.minWin[i].max) {
-            minW += Chessboard.FOUR_W;
+            minGroup[4]++;
         }
         if (this.maxWin[i].max == 3 && !this.maxWin[i].min) {
-            maxW += Chessboard.THREE_W;
+            maxGroup[3]++;
         }
         if (this.minWin[i].min == 3 && !this.minWin[i].max) {
-            minW += Chessboard.THREE_W;
+            minGroup[3]++;
         }
         if (this.maxWin[i].max == 2 && !this.maxWin[i].min) {
-            maxW += Chessboard.TWO_W;
+            maxGroup[2]++;
         }
         if (this.minWin[i].min == 2 && !this.minWin[i].max) {
-            minW += Chessboard.TWO_W;
+            minGroup[2]++;
+        }
+        if (this.maxWin[i].max == 1 && !this.maxWin[i].min) {
+            maxGroup[1]++;
+        }
+        if (this.minWin[i].min == 1 && !this.minWin[i].max) {
+            minGroup[1]++;
         }
     }
+    maxW = maxGroup[4] * Chessboard.FOUR_W + maxGroup[3] * Chessboard.THREE_W + maxGroup[2] * Chessboard.TWO_W + maxGroup[1] * Chessboard.ONE_W;
+    minW = minGroup[4] * Chessboard.FOUR_W + minGroup[3] * Chessboard.THREE_W + minGroup[2] * Chessboard.TWO_W + minGroup[1] * Chessboard.ONE_W;
     return maxW - minW;
 };
 /**
@@ -667,5 +721,6 @@ Chessboard.SFOUR_W = 10000;
 Chessboard.FOUR_W = 5000;
 Chessboard.STHREE_W = 2000;
 Chessboard.THREE_W = 1000;
-Chessboard.STWO_W = 50;
-Chessboard.TWO_W = 20;
+Chessboard.STWO_W = 500;
+Chessboard.TWO_W = 200;
+Chessboard.ONE_W = 10;
